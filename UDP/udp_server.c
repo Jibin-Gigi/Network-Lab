@@ -11,7 +11,7 @@
 int main() {
     int sockfd, n, m;
     char buffer[MAX];
-    struct sockaddr_in serv_addr;
+    struct sockaddr_in client_addr;
     socklen_t addr_size;
 
     // 1. Create UDP socket
@@ -23,11 +23,11 @@ int main() {
     printf("UDP socket created. Server ready to send.\n");
 
     // 2. Configure destination (client) address
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
-    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    client_addr.sin_family = AF_INET;
+    client_addr.sin_port = htons(PORT);
+    client_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    addr_size = sizeof(serv_addr);
+    addr_size = sizeof(client_addr);
 
     while (1) {
         // 3. Clear buffer and get message to send
@@ -38,14 +38,14 @@ int main() {
         buffer[n - 1] = '\0'; // Replace newline with null terminator
 
         // 4. Send message to client
-        sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr*)&serv_addr, addr_size);
+        sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr*)&client_addr, addr_size);
 
         if (strncmp(buffer, "quit", 4) == 0)
             break;
 
         // 5. Receive response from client
         bzero(buffer, MAX);
-        m = recvfrom(sockfd, buffer, MAX, 0, (struct sockaddr*)&serv_addr, &addr_size);
+        m = recvfrom(sockfd, buffer, MAX, 0, (struct sockaddr*)&client_addr, &addr_size);
         buffer[m] = '\0';
         printf("Received from client: %s\n", buffer);
     }
