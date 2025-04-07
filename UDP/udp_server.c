@@ -11,46 +11,54 @@
 int main() {
     int sockfd, n, m;
     char buffer[MAX];
-    struct sockaddr_in client_addr;
-    socklen_t addr_size;
+    struct sockaddr_in serv_addr, client_addr;
+    socklen_t client_len;
 
     // 1. Create UDP socket
-    sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0) {
         perror("Socket creation failed");
         exit(1);
     }
-    printf("UDP socket created. Server ready to send.\n");
+    printf("UDP socket created. Waiting for clients...\n");
 
-    // 2. Configure destination (client) address
-    client_addr.sin_family = AF_INET;
-    client_addr.sin_port = htons(PORT);
-    client_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    // 2. Configure server address
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(PORT);
+    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    addr_size = sizeof(client_addr);
+    // 3. Bind the socket to IP and port
+    if (bind(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+        perror("Bind failed");
+        close(sockfd);
+        exit(1);
+    }
+    printf("Server bound to port %d\n", PORT);
+
+    client_len = sizeof(client_addr);
 
     while (1) {
-        // 3. Clear buffer and get message to send
+        // 4. Receive message from client
         bzero(buffer, MAX);
-        printf("Message to send: ");
-        n = 0;
-        while ((buffer[n++] = getchar()) != '\n');
-        buffer[n - 1] = '\0'; // Replace newline with null terminator
-
-        // 4. Send message to client
-        sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr*)&client_addr, addr_size);
+        m = recvfrom(sockfd, buffer, MAX, 0, (struct sockaddr*)&client_addr, &client_len);
+        buffer[m] = '\0';
+        printf("Received from client: %s\n", buffer);
 
         if (strncmp(buffer, "quit", 4) == 0)
             break;
 
-        // 5. Receive response from client
+        // 5. Send response to the client
         bzero(buffer, MAX);
-        m = recvfrom(sockfd, buffer, MAX, 0, (struct sockaddr*)&client_addr, &addr_size);
-        buffer[m] = '\0';
-        printf("Received from client: %s\n", buffer);
+        printf("Message to send: ");
+        n = 0;
+        while ((buffer[n++] = getchar()) != '\n');
+        buffer[n - 1] = '\0';
+
+        sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr*)&client_addr, client_len);
     }
 
     close(sockfd);
     printf("Server socket closed.\n");
     return 0;
 }
+
