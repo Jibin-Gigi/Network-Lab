@@ -9,7 +9,7 @@
 #define MAX 1024
 
 int main() {
-    int sockfd, n;
+    int sockfd, n, m;
     char buffer[MAX];
     struct sockaddr_in serv_addr;
     socklen_t addr_size;
@@ -25,14 +25,17 @@ int main() {
     // 2. Configure destination (client) address
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(PORT);
-    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1"); // Replace with client IP if needed
+    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
     addr_size = sizeof(serv_addr);
 
     while (1) {
-        // 3. Get message to send
+        // 3. Clear buffer and get message to send
+        bzero(buffer, MAX);
         printf("Message to send: ");
+        n = 0;
         while ((buffer[n++] = getchar()) != '\n');
+        buffer[n - 1] = '\0'; // Replace newline with null terminator
 
         // 4. Send message to client
         sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr*)&serv_addr, addr_size);
@@ -41,8 +44,9 @@ int main() {
             break;
 
         // 5. Receive response from client
-        n = recvfrom(sockfd, buffer, MAX, 0, (struct sockaddr*)&serv_addr, &addr_size);
-        buffer[n] = '\0';
+        bzero(buffer, MAX);
+        m = recvfrom(sockfd, buffer, MAX, 0, (struct sockaddr*)&serv_addr, &addr_size);
+        buffer[m] = '\0';
         printf("Received from client: %s\n", buffer);
     }
 
