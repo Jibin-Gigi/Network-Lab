@@ -15,7 +15,7 @@ int main() {
     socklen_t addr_size;
 
     // 1. Create UDP socket
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sockfd < 0) {
         perror("Socket creation failed");
         exit(1);
